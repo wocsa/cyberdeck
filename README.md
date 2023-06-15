@@ -6,7 +6,7 @@ To build it please [read the doc](pi-gen.md)
 
 ## What is it ?
 
-Cyberdeck is the equipment for Cyberjūtsuka サイバー述家 used to practice Cyberjūtsu サイバー述.
+Cyberdeck is the equipment for [Cyberjūtsuka サイバー述家](https://github.com/wocsa/cyberjutsu/blob/main/glossary.md#cyberjutsuka) used to practice [Cyberjūtsu サイバー述](http://github.com/wocsa/cyberjutsu).
 
 It's like Judogi for Judoka or Karategi for Karateka.
 
