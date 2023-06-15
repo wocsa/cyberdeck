@@ -36,15 +36,15 @@ Cyberdeck is made to provide capability to Cyberjūtsuka to practice and communi
 
 ## Services opened on boot
 
-http (port 80) apache or httpd service
-https (port 443) apache or httpd service
-ftp (port 21) pure-ftpd service
-snmp (port 161) snmpd service
-dns (port 53) dnsmasq service
-smtp (port 25) smtpd service
-telnet (port 23) telnetd service
-ssh (port 22) sshd service
-ntp (port 123) ntpd service
+* http (port 80) apache or httpd service
+* https (port 443) apache or httpd service
+* ftp (port 21) pure-ftpd service
+* snmp (port 161) snmpd service
+* dns (port 53) dnsmasq service
+* smtp (port 25) smtpd service
+* telnet (port 23) telnetd service
+* ssh (port 22) sshd service
+* ntp (port 123) ntpd service
 
 
 ## default configuration by services
