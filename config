@@ -1,0 +1,5 @@
+IMG_NAME='cyberdeck'
+LOCALE_DEFAULT='en_GB.UTF-8'
+TIMEZONE_DEFAULT='Europe/Paris'
+FIRST_USERNAME='cyberjutsuka'
+FIRST_USER_PASS='hajime'
