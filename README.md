@@ -15,6 +15,7 @@ Cyberdeck is made to provide capability to Cyberjūtsuka to practice and communi
 
 ## Command line tools available
 * bash
+* chroot
 * nmap
 * curl
 * screen
