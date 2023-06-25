@@ -30,4 +30,7 @@ echo '<VirtualHost *:80>
     DocumentRoot /var/www/html
   </Directory>
 
-</VirtualHost>' > /etc/apache2/sites-available/cyberjutsu.conf
+</VirtualHost>' > /etc/apache2/sites-available/001-cyberjutsu.conf
+
+a2dissite default
+a2ensite 001-cyberjutsu
