@@ -1,5 +1,5 @@
 export IMG_NAME=cyberdeck
-DEPLOY_ZIP=1
+export DEPLOY_ZIP=1
 export TARGET_HOSTNAME=cyberdeck
 export LOCALE_DEFAULT=en_GB.UTF-8
 export TIMEZONE_DEFAULT=Europe/Paris
