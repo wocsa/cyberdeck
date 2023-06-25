@@ -54,17 +54,24 @@ echo '#!/bin/sh' > /etc/network/if-up.d/iptables
 echo "iptables-restore < /etc/firewall.conf" >> /etc/network/if-up.d/iptables
 chmod +x /etc/network/if-up.d/iptables
 
+echo "rename pi user into cyberjutsuka and set password"
+
+if id pi; then 
+  usermod --login cyberjutsuka pi
+fi
+echo "cyberjutsuka:hajime" | chpasswd
+
 echo "setting up web server apache2"
-usermod --login cyberjutsuka pi
-echo "hadjime"|passwd cyberjutsuka --stdin
 usermod -a -G www-data cyberjutsuka
 chown -R -f www-data:www-data /var/www/html
 
+sed -i 's/ServerToken OS/#ServerToken OS/' /etc/apache2/conf-enabled/security.conf
+sed -i 's/#ServerToken Full/ServerToken Full/' /etc/apache2/conf-enabled/security.conf
+sed -i 's/TraceEnabled Off/#TraceEnabled Off/' /etc/apache2/conf-enabled/security.conf
+sed -i 's/#TraceEnabled On/TraceEnabled On/' /etc/apache2/conf-enabled/security.conf
+
 cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
 <VirtualHost *:80>
-
-  ServerSignature On
-  ServerTokens Full
 
   LogLevel info
   LogFormat "%h %l %u %t \"%r\" %>s %b" comm
@@ -97,5 +104,8 @@ a2dissite default-ssl
 a2ensite 001-cyberjutsu
 
 echo "setting up ftp server"
-groupadd ftpgroup
+groupadd -f ftpgroup
 usermod -a -G ftpgroup cyberjutsuka
+
+echo "enable wireless"
+rfkill unblock all
