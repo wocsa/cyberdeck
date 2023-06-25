@@ -1,5 +1,11 @@
-IMG_NAME='cyberdeck'
-LOCALE_DEFAULT='en_GB.UTF-8'
-TIMEZONE_DEFAULT='Europe/Paris'
-FIRST_USERNAME='cyberjutsuka'
-FIRST_USER_PASS='hajime'
+export IMG_NAME=cyberdeck
+DEPLOY_ZIP=1
+export TARGET_HOSTNAME=cyberdeck
+export LOCALE_DEFAULT=en_GB.UTF-8
+export TIMEZONE_DEFAULT=Europe/Paris
+export KEYBOARD_KEYMAP=fr
+export KEYBOARD_LAYOUT="French (FR)"
+export FIRST_USERNAME=cyberjutsuka
+export FIRST_USER_PASS=hajime
+export DISABLE_FIRST_BOOT_USER_RENAME=1
+export ENABLE_SSH=1
