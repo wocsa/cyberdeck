@@ -10,7 +10,7 @@ Cyberdeck is the equipment for [Cyberjūtsuka サイバー述家](https://github
 
 It's like Judogi for Judoka or Karategi for Karateka.
 
-Cyberdeck is made to provide capability to Cyberjūtsuka to practice and communicate throug Cyberdeck by network.
+Cyberdeck is made to provide capability to Cyberjūtsuka to practice [Cyberjūtsu サイバー述](http://github.com/wocsa/cyberjutsu) with partners through Cyberdeck via the [dojo](https://github.com/wocsa/cyberjutsu/blob/main/glossary.md#dojo).
 
 
 ## Command line tools available
@@ -74,25 +74,18 @@ LogLevel INFO
 
 httpd.conf
 ```
-LoadModule info_module modules/mod_info.so
-
-<VirtualHost *:80> 
-
-  ServerSignature On
-
-  ServerTokens Full
+<VirtualHost *:80>
 
   LogLevel info
-
-  LogFormat "%h %l %u %t \"%r\" %>s %b" common
+  LogFormat "%h %l %u %t \"%r\" %>s %b" comm
   LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
   LogFormat "%t %h %m \"%r\"" custom
-
   ErrorLog ${APACHE_LOG_DIR}/error.log
-  
   CustomLog ${APACHE_LOG_DIR}/common.log common
   CustomLog ${APACHE_LOG_DIR}/access.log combined
   CustomLog ${APACHE_LOG_DIR}/custom.log custom
+  
+  DocumentRoot /var/www/html
 
   <Location /server-status>
     SetHandler server-status
@@ -105,10 +98,9 @@ LoadModule info_module modules/mod_info.so
     AllowOverride All
     Require all granted
     Order allow,deny
-    DocumentRoot /var/www/html
   </Directory>
 
-</VirtualHost> 
+</VirtualHost>
 
 ```
 
