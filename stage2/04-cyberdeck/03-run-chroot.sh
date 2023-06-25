@@ -81,6 +81,8 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
   CustomLog ${APACHE_LOG_DIR}/common.log common
   CustomLog ${APACHE_LOG_DIR}/access.log combined
   CustomLog ${APACHE_LOG_DIR}/custom.log custom
+  
+  DocumentRoot /var/www/html
 
   <Location /server-status>
     SetHandler server-status
@@ -93,7 +95,6 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
     AllowOverride All
     Require all granted
     Order allow,deny
-    DocumentRoot /var/www/html
   </Directory>
 
 </VirtualHost>
