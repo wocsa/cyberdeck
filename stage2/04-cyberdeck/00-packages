@@ -9,3 +9,10 @@ debianutils
 coreutils
 fortune
 apache2
+dnsmasq
+snmpd
+opensmtpd
+openssl
+openssh
+openntpd
+telnetd
