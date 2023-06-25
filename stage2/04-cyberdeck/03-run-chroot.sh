@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 echo "setting up firewall iptables logging"
 iptables -F
@@ -39,13 +39,14 @@ echo "setting up web server apache2"
 usermod -a -G www-data cyberjutsuka
 chown -R -f www-data:www-data /var/www/html
 
-echo '<VirtualHost *:80>
+cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
+<VirtualHost *:80>
 
   ServerSignature On
   ServerTokens Full
 
   LogLevel info
-  LogFormat "%h %l %u %t \"%r\" %>s %b" common
+  LogFormat "%h %l %u %t \"%r\" %>s %b" comm
   LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
   LogFormat "%t %h %m \"%r\"" custom
   ErrorLog ${APACHE_LOG_DIR}/error.log
@@ -67,7 +68,8 @@ echo '<VirtualHost *:80>
     DocumentRoot /var/www/html
   </Directory>
 
-</VirtualHost>' > /etc/apache2/sites-available/001-cyberjutsu.conf
+</VirtualHost>
+EOL
 
 a2dissite default
 a2ensite 001-cyberjutsu
