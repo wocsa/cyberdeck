@@ -15,3 +15,4 @@ openssl
 ssh
 openntpd
 telnetd
+pure-ftpd

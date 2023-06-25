@@ -1,11 +1,15 @@
+import { doesNotReject } from "assert"
+
 export IMG_NAME=cyberdeck
 export DEPLOY_ZIP=1
 export TARGET_HOSTNAME=cyberdeck
 export LOCALE_DEFAULT=en_GB.UTF-8
 export TIMEZONE_DEFAULT=Europe/Paris
 export KEYBOARD_KEYMAP=fr
-export KEYBOARD_LAYOUT="French (FR)"
-export FIRST_USERNAME=cyberjutsuka
-export FIRST_USER_PASS=hajime
+export KEYBOARD_LAYOUT="English (GB)"
+export FIRST_USERNAME="cyberjutsuka"
+export FIRST_USER_PASS="hajime"
 export DISABLE_FIRST_BOOT_USER_RENAME=1
 export ENABLE_SSH=1
+export WPA_ESSID=dojo
+export WPA_PASSWORD=cyberjutsu
