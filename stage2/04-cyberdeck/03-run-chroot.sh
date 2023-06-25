@@ -55,7 +55,9 @@ echo "iptables-restore < /etc/firewall.conf" >> /etc/network/if-up.d/iptables
 chmod +x /etc/network/if-up.d/iptables
 
 echo "setting up web server apache2"
-sed -i 's/^www-data:[^:]\+:[0-9]\+:.*$/\0,cyberjutsuka/' /etc/group 
+usermod --login cyberjutsuka pi
+echo "hadjime"|passwd cyberjutsuka --stdin
+usermod -a -G www-data cyberjutsuka
 chown -R -f www-data:www-data /var/www/html
 
 cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
@@ -93,3 +95,7 @@ EOL
 a2dissite 000-default
 a2dissite default-ssl
 a2ensite 001-cyberjutsu
+
+echo "setting up ftp server"
+groupadd ftpgroup
+usermod -a -G ftpgroup cyberjutsuka
