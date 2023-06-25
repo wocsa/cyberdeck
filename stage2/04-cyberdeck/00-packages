@@ -13,6 +13,6 @@ dnsmasq
 snmpd
 opensmtpd
 openssl
-openssh
+ssh
 openntpd
 telnetd
