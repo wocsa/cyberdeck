@@ -17,3 +17,4 @@ openntpd
 telnetd
 pure-ftpd
 postfix
+ftp
