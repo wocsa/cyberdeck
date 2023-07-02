@@ -54,6 +54,17 @@ echo '#!/bin/sh' > /etc/network/if-up.d/iptables
 echo "iptables-restore < /etc/firewall.conf" >> /etc/network/if-up.d/iptables
 chmod +x /etc/network/if-up.d/iptables
 
+echo "configure keyboard layout"
+echo '
+XKBMODEL="pc105"
+XKBLAYOUT="fr"
+XKBVARIANT=""
+XKBOPTIONS=""
+BACKSPACE="guess"
+' > /etc/default/keyboard
+    
+dpkg-reconfigure --frontend noninteractive keyboard-configuration
+
 echo "rename pi user into cyberjutsuka and set password"
 
 usermod --login cyberjutsuka pi || true
