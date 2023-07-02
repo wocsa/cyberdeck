@@ -99,7 +99,8 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
   </Location>
 
   <Directory />
-    Options All
+    Dav On
+    Options All MultiViews
     AllowOverride All
     Require all granted
     Order deny,allow
@@ -113,6 +114,8 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
 </VirtualHost>
 EOL
 
+a2enmod dav
+a2enmod dav_fs
 a2enmod authnz_pam
 a2dissite 000-default
 a2dissite default-ssl
