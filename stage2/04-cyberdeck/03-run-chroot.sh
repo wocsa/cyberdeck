@@ -94,8 +94,15 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
 
   <Location /server-status>
     SetHandler server-status
-    Order allow,deny
-    Allow from all
+    Options All MultiViews
+    AllowOverride All
+    Require all granted
+    Order deny,allow
+    AuthType Basic
+    AuthName "private area"
+    AuthBasicProvider PAM
+    AuthPAMService apache
+    Require valid-user
   </Location>
 
   <Directory />
