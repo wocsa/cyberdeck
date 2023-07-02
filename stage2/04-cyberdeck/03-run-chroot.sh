@@ -56,9 +56,7 @@ chmod +x /etc/network/if-up.d/iptables
 
 echo "rename pi user into cyberjutsuka and set password"
 
-if id pi; then 
-  usermod --login cyberjutsuka pi
-fi
+usermod --login cyberjutsuka pi || true
 echo "cyberjutsuka:hajime" | chpasswd
 
 echo "setting up web server apache2"
@@ -70,6 +68,16 @@ sed -i 's/#ServerToken Full/ServerToken Full/' /etc/apache2/conf-enabled/securit
 sed -i 's/TraceEnabled Off/#TraceEnabled Off/' /etc/apache2/conf-enabled/security.conf
 sed -i 's/#TraceEnabled On/TraceEnabled On/' /etc/apache2/conf-enabled/security.conf
 
+cat > /etc/pam.d/apache <<EOL
+auth required pam_unix.so
+account required pam_unix.so
+EOL
+
+groupadd shadow || true
+usermod -a -G shadow www-data
+chown root:shadow /etc/shadow
+chmod g+r /etc/shadow
+
 cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
 <VirtualHost *:80>
 
@@ -77,10 +85,10 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
   LogFormat "%h %l %u %t \"%r\" %>s %b" comm
   LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
   LogFormat "%t %h %m \"%r\"" custom
-  ErrorLog ${APACHE_LOG_DIR}/error.log
-  CustomLog ${APACHE_LOG_DIR}/common.log common
-  CustomLog ${APACHE_LOG_DIR}/access.log combined
-  CustomLog ${APACHE_LOG_DIR}/custom.log custom
+  ErrorLog "| /usr/bin/logger -thttp_error: -plocal6.err"
+  CustomLog "| /usr/bin/logger -thttp_info: -plocal6.info" common
+  CustomLog "| /usr/bin/logger -thttp_info: -plocal6.info" combined
+  CustomLog "| /usr/bin/logger -thttp_info: -plocal6.info" custom
   
   DocumentRoot /var/www/html
 
@@ -94,12 +102,18 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
     Options All
     AllowOverride All
     Require all granted
-    Order allow,deny
+    Order deny,allow
+    AuthType Basic
+    AuthName "private area"
+    AuthBasicProvider PAM
+    AuthPAMService apache
+    Require valid-user
   </Directory>
 
 </VirtualHost>
 EOL
 
+a2enmod authnz_pam
 a2dissite 000-default
 a2dissite default-ssl
 a2ensite 001-cyberjutsu
