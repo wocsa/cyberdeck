@@ -1,2 +1,20 @@
 postfix postfix/mailname string cyberjutsu.local
 postfix postfix/main_mailer_type string 'Internet Site'
+
+keyboard-configuration keyboard-configuration/variantcode: azerty
+keyboard-configuration keyboard-configuration/store_defaults_in_debconf_db: true
+keyboard-configuration keyboard-configuration/unsupported_config_options: true
+keyboard-configuration keyboard-configuration/compose: Menu key
+keyboard-configuration keyboard-configuration/variant: French - French (AZERTY)
+keyboard-configuration keyboard-configuration/altgr: Right Alt (AltGr)
+keyboard-configuration keyboard-configuration/unsupported_config_layout: true
+keyboard-configuration keyboard-configuration/unsupported_options: true
+keyboard-configuration keyboard-configuration/optionscode: lv3:ralt_switch,compose:menu
+keyboard-configuration keyboard-configuration/layout: French
+keyboard-configuration keyboard-configuration/unsupported_layout: true
+keyboard-configuration keyboard-configuration/layoutcode: fr
+keyboard-configuration keyboard-configuration/switch: No temporary switch
+keyboard-configuration keyboard-configuration/modelcode: pc105
+keyboard-configuration keyboard-configuration/toggle: No toggling
+keyboard-configuration keyboard-configuration/xkb-keymap: fr(azerty)
+keyboard-configuration keyboard-configuration/model: Generic 105-key PC (intl.)
