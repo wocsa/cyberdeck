@@ -65,6 +65,24 @@ BACKSPACE="guess"
     
 dpkg-reconfigure --frontend noninteractive keyboard-configuration
 
+echo "configure console font size"
+echo '
+# CONFIGURATION FILE FOR SETUPCON
+
+# Consult the console-setup(5) manual page.
+
+ACTIVE_CONSOLES="/dev/tty[1-6]"
+
+CHARMAP="UTF-8"
+
+CODESET="guess"
+FONTFACE="Terminus"
+FONTSIZE="6x12"
+
+VIDEOMODE=
+
+' > /etc/default/console-setup
+
 echo "rename pi user into cyberjutsuka and set password"
 
 usermod --login cyberjutsuka pi || true
