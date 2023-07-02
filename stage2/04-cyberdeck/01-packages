@@ -18,3 +18,4 @@ telnetd
 pure-ftpd
 postfix
 ftp
+libapache2-mod-authnz-pam
