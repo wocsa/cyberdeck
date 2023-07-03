@@ -15,8 +15,10 @@ openssl
 ssh
 openntpd
 telnetd
+telnet
 pure-ftpd
 postfix
 ftp
 libapache2-mod-authnz-pam
 lynx
+dsniff
