@@ -1,0 +1,58 @@
+- hosts: localhost
+  vars:
+    project_name: "Cyberdeck"
+    branch_name: "master"  # Update this as needed
+    commit_number: "123abc"  # Update this as needed
+    s3_bucket: "{{ project_name | lower }}-{{ branch_name | lower }}-bucket"
+    image_key: "{{ project_name | lower }}-{{ branch_name | lower }}-image-{{ ansible_date_time.date }}.img"
+    region: "{{ lookup('env', 'AWS_REGION') }}"  # Use environment variable
+
+  tasks:
+    - name: Clone the Cyberdeck repository
+      git:
+        repo: 'https://github.com/wocsa/cyberdeck.git'
+        dest: './cyberdeck'
+        version: "{{ branch_name }}"
+
+    - name: Run build script
+      shell: cd ./cyberdeck && ./build.sh
+      register: build_script_output
+
+    - name: Archive the build image
+      shell: zip -j ./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.zip ./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.img
+
+    - name: Unzip to extract the raw image
+      unarchive:
+        src: "./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.zip"
+        dest: "./cyberdeck/deploy/"
+        remote_src: yes
+
+    - name: Create an S3 bucket
+      aws_s3_bucket:
+        name: "{{ s3_bucket }}"
+        region: "{{ region }}"
+        tags:
+          ProjectName: "{{ project_name }}"
+          BranchName: "{{ branch_name }}"
+          CommitNumber: "{{ commit_number }}"
+
+    - name: Upload the raw image to S3
+      aws_s3:
+        bucket: "{{ s3_bucket }}"
+        object: "/{{ image_key }}"
+        src: "./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.img"
+        mode: put
+        region: "{{ region }}"
+        tags:
+          ProjectName: "{{ project_name }}"
+          BranchName: "{{ branch_name }}"
+          CommitNumber: "{{ commit_number }}"
+
+    - name: Import image as AMI
+      shell: |
+        aws ec2 import-image --region {{ region }} --description "{{ project_name }}-{{ branch_name }}-ami" --disk-containers "Format=raw,UserBucket={S3Bucket={{ s3_bucket }},S3Key={{ image_key }}}" --tag-specifications "ResourceType=image,Tags=[{Key=ProjectName,Value={{ project_name }}},{Key=BranchName,Value={{ branch_name }}},{Key=CommitNumber,Value={{ commit_number }}}]"
+      register: import_task_result
+
+    - name: Output import task details
+      debug:
+        msg: "Import task started. Details: {{ import_task_result.stdout }}"

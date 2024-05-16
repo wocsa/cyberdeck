@@ -1,0 +1,64 @@
+name: Deploy AMI and Infrastructure via Ansible and Terraform
+
+on:
+  push:
+    branches:
+      - main  # Adjust this as needed to match your workflow triggers
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: Install Ansible and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+          ansible-galaxy install -r ./ansible/requirements.yml  # If you have a requirements file located in the ansible directory
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Run Ansible Playbook
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          PROJECT_NAME: 'Cyberdeck'
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_NUMBER: ${{ github.sha }}
+        run: |
+          cd ansible
+          ansible-playbook site.yml --extra-vars "project_name=${{ env.PROJECT_NAME }} branch_name=${{ env.BRANCH_NAME }} commit_number=${{ env.COMMIT_NUMBER }}"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: "1.0.0"  # Specify your Terraform version here
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform
+          terraform init
+
+      - name: Apply Terraform
+        run: |
+          cd terraform
+          terraform apply -auto-approve
+        env:
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_project_name: ${{ env.PROJECT_NAME }}
+          TF_VAR_branch_name: ${{ env.BRANCH_NAME }}
+          TF_VAR_commit_number: ${{ env.COMMIT_NUMBER }}
+
+      - name: Output Result
+        run: echo "Deployment completed"
