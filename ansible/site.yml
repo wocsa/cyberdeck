@@ -1,8 +1,8 @@
 - hosts: localhost
   vars:
-    project_name: "Cyberdeck"
-    branch_name: "master"  # Update this as needed
-    commit_number: "123abc"  # Update this as needed
+    project_name: "{{ lookup('env', 'PROJECT_NAME') }}"  # Use environment variable
+    branch_name: "{{ lookup('env', 'BRANCH_NAME') }}"  # Use environment variable
+    commit_number: "{{ lookup('env', 'COMMIT_NUMBER') }}"  # Use environment variable
     s3_bucket: "{{ project_name | lower }}-{{ branch_name | lower }}-bucket"
     image_key: "{{ project_name | lower }}-{{ branch_name | lower }}-image-{{ ansible_date_time.date }}.img"
     region: "{{ lookup('env', 'AWS_REGION') }}"  # Use environment variable
@@ -28,16 +28,17 @@
         remote_src: yes
 
     - name: Create an S3 bucket
-      aws_s3_bucket:
+      community.aws.aws_s3_bucket:
         name: "{{ s3_bucket }}"
         region: "{{ region }}"
+        state: present
         tags:
           Project: "{{ project_name }}"
           GitBranch: "{{ branch_name }}"
           CommitNumber: "{{ commit_number }}"
 
     - name: Upload the raw image to S3
-      aws_s3:
+      community.aws.aws_s3:
         bucket: "{{ s3_bucket }}"
         object: "/{{ image_key }}"
         src: "./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.img"

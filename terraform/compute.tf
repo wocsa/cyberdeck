@@ -9,8 +9,8 @@ resource "aws_instance" "cluster" {
 
   tags = {
     Name = "${var.project_name}-${var.git_branch_name}-instance-${count.index}"
-    GitBranch = var.git_branch_name
-    CommitNumber = var.commit_number
-    Project = var.project_name
+    Project = "${var.project_name}"
+    GitBranch = "${var.git_branch_name}"
+    CommitNumber = "${var.commit_number}"
   }
 }

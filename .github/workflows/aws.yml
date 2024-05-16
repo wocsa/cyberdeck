@@ -19,6 +19,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+            calculatedSha=$(git rev-parse --short ${{ github.sha }})
+            echo "COMMIT_SHORT_SHA=$calculatedSha" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -39,6 +45,9 @@ jobs:
 
       - name: Run Ansible Playbook to Build AMI
         env:
+          PROJECT_NAME: ${{ env.GITHUB_REPOSITORY }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          AWS_REGION: ${{ env.AWS_REGION }}
           AWS_REGION: ${{ env.AWS_REGION }}
         run: |
           cd ansible
@@ -69,6 +78,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+            calculatedSha=$(git rev-parse --short ${{ github.sha }})
+            echo "COMMIT_SHORT_SHA=$calculatedSha" >> $GITHUB_ENV
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
         with:
@@ -93,7 +108,7 @@ jobs:
 
       - name: Destroy AMIs based on project and branch tags
         env:
-          PROJECT_NAME: 'Cyberdeck'
+          PROJECT_NAME: ${{ env.GITHUB_REPOSITORY }}
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
           AMIS=$(aws ec2 describe-images --filters "Name=tag:Project,Values=${PROJECT_NAME}" "Name=tag:GitBranch,Values=${BRANCH_NAME}" --query 'Images[*].[ImageId]' --output text)

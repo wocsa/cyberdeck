@@ -21,6 +21,6 @@ resource "aws_security_group" "allow_ssh" {
     Name = "${var.project_name}-${var.git_branch_name}-sg"
     Project = "${var.project_name}"
     GitBranch = "${var.git_branch_name}"
-    CommitNumber = var.commit_number
+    CommitNumber = "${var.commit_number}"
   }
 }

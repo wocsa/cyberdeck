@@ -1,9 +1,5 @@
 provider "aws" {
-  region = "us-west-2"
-}
-
-variable "instance_count" {
-  default = 3
+  region = "${var.aws_region}"
 }
 
 resource "aws_key_pair" "deployer_key" {

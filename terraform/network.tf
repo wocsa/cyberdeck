@@ -7,7 +7,7 @@ resource "aws_vpc" "main" {
     Name = "${var.project_name}-${var.git_branch_name}-vpc"
     Project = "${var.project_name}"
     GitBranch = "${var.git_branch_name}"
-    CommitNumber = var.commit_number
+    CommitNumber = "${var.commit_number}"
   }
 }
 
@@ -20,7 +20,7 @@ resource "aws_subnet" "main" {
     Name = "${var.project_name}-${var.git_branch_name}-subnet"
     Project = "${var.project_name}"
     GitBranch = "${var.git_branch_name}"
-    CommitNumber = var.commit_number
+    CommitNumber = "${var.commit_number}"
   }
 }
 
@@ -31,7 +31,7 @@ resource "aws_internet_gateway" "gw" {
     Name = "${var.project_name}-${var.git_branch_name}-igw"
     Project = "${var.project_name}"
     GitBranch = "${var.git_branch_name}"
-    CommitNumber = var.commit_number
+    CommitNumber = "${var.commit_number}"
   }
 }
 
@@ -47,7 +47,7 @@ resource "aws_route_table" "main" {
     Name = "${var.project_name}-${var.git_branch_name}-rtb"
     Project = "${var.project_name}"
     GitBranch = "${var.git_branch_name}"
-    CommitNumber = var.commit_number
+    CommitNumber = "${var.commit_number}"
   }
 }
 
