@@ -8,6 +8,22 @@
     region: "{{ lookup('env', 'AWS_REGION') }}"  # Use environment variable
 
   tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required dependencies
+      apt:
+        name:
+          - quilt
+          - qemu-user-static
+          - debootstrap
+          - libarchive-tools
+          - qemu-utils
+        state: present
+      become: yes
+
     - name: Clone the Cyberdeck repository
       git:
         repo: 'https://github.com/wocsa/cyberdeck.git'
