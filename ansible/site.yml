@@ -16,6 +16,8 @@
 
     - name: Run build script
       shell: cd ./cyberdeck && ./build.sh
+      become: yes
+      become_user: root
       register: build_script_output
 
     - name: Archive the build image
