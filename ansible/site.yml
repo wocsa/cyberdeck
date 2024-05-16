@@ -32,8 +32,8 @@
         name: "{{ s3_bucket }}"
         region: "{{ region }}"
         tags:
-          ProjectName: "{{ project_name }}"
-          BranchName: "{{ branch_name }}"
+          Project: "{{ project_name }}"
+          GitBranch: "{{ branch_name }}"
           CommitNumber: "{{ commit_number }}"
 
     - name: Upload the raw image to S3
@@ -44,13 +44,13 @@
         mode: put
         region: "{{ region }}"
         tags:
-          ProjectName: "{{ project_name }}"
-          BranchName: "{{ branch_name }}"
+          Project: "{{ project_name }}"
+          GitBranch: "{{ branch_name }}"
           CommitNumber: "{{ commit_number }}"
 
     - name: Import image as AMI
       shell: |
-        aws ec2 import-image --region {{ region }} --description "{{ project_name }}-{{ branch_name }}-ami" --disk-containers "Format=raw,UserBucket={S3Bucket={{ s3_bucket }},S3Key={{ image_key }}}" --tag-specifications "ResourceType=image,Tags=[{Key=ProjectName,Value={{ project_name }}},{Key=BranchName,Value={{ branch_name }}},{Key=CommitNumber,Value={{ commit_number }}}]"
+        aws ec2 import-image --region {{ region }} --description "{{ project_name }}-{{ branch_name }}-ami" --disk-containers "Format=raw,UserBucket={S3Bucket={{ s3_bucket }},S3Key={{ image_key }}}" --tag-specifications "ResourceType=image,Tags=[{Key=Project,Value={{ project_name }}},{Key=GitBranch,Value={{ branch_name }}},{Key=CommitNumber,Value={{ commit_number }}}]"
       register: import_task_result
 
     - name: Output import task details

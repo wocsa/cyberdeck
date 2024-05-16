@@ -35,11 +35,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Run Ansible Playbook to Build AMI
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_REGION: ${{ env.AWS_REGION }}
         run: |
           cd ansible
           ansible-playbook site.yml
@@ -55,6 +55,9 @@ jobs:
           terraform init
 
       - name: Apply Terraform
+        env:
+            TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+            TF_VAR_instance_count: ${{ vars.INSTANCE_COUNT }}
         run: |
           cd terraform
           terraform apply -auto-approve
@@ -86,7 +89,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Destroy AMIs based on project and branch tags
         env:
