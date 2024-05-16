@@ -27,8 +27,9 @@
         dest: "./cyberdeck/deploy/"
         remote_src: yes
 
+
     - name: Create an S3 bucket
-      community.aws.aws_s3_bucket:
+      community.aws.s3_bucket:
         name: "{{ s3_bucket }}"
         region: "{{ region }}"
         state: present
@@ -38,7 +39,7 @@
           CommitNumber: "{{ commit_number }}"
 
     - name: Upload the raw image to S3
-      community.aws.aws_s3:
+      community.aws.s3:
         bucket: "{{ s3_bucket }}"
         object: "/{{ image_key }}"
         src: "./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.img"
@@ -53,6 +54,7 @@
       shell: |
         aws ec2 import-image --region {{ region }} --description "{{ project_name }}-{{ branch_name }}-ami" --disk-containers "Format=raw,UserBucket={S3Bucket={{ s3_bucket }},S3Key={{ image_key }}}" --tag-specifications "ResourceType=image,Tags=[{Key=Project,Value={{ project_name }}},{Key=GitBranch,Value={{ branch_name }}},{Key=CommitNumber,Value={{ commit_number }}}]"
       register: import_task_result
+
 
     - name: Output import task details
       debug:
