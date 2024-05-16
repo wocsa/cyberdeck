@@ -29,7 +29,7 @@
 
 
     - name: Create an S3 bucket
-      community.aws.s3_bucket:
+      community.aws.s3:
         name: "{{ s3_bucket }}"
         region: "{{ region }}"
         state: present
