@@ -35,10 +35,6 @@
       command: date +%Y-%m-%d
       register: current_date
 
-    - name: Set the current date as a fact
-      set_fact:
-        current_date: "{{ current_date_output.stdout }}"
-
     - name: Run build script
       shell: cd ./cyberdeck && ./build.sh
       become: yes
@@ -47,7 +43,7 @@
 
     - name: Unzip to extract the raw image
       unarchive:
-        src: "./cyberdeck/deploy/image_{{ current_date }}-cyberdeck-lite.zip"
+        src: "./cyberdeck/deploy/image_{{ current_date_output.stdout }}-cyberdeck-lite.zip"
         dest: "./cyberdeck/deploy/"
         remote_src: yes
 
@@ -66,7 +62,7 @@
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
         key: "{{ image_key }}"
-        src: "./cyberdeck/deploy/{{ current_date }}-cyberdeck-lite.img"
+        src: "./cyberdeck/deploy/{{ current_date_output.stdout }}-cyberdeck-lite.img"
         region: "{{ region }}"
         mode: put
         tags:
