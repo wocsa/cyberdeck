@@ -35,6 +35,10 @@
       command: date +%Y-%m-%d
       register: current_date
 
+    - name: Set the current date as a fact
+      set_fact:
+        current_date: "{{ current_date_output.stdout }}"
+
     - name: Run build script
       shell: cd ./cyberdeck && ./build.sh
       become: yes
