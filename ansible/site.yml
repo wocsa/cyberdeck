@@ -31,18 +31,19 @@
         dest: './cyberdeck'
         version: "{{ branch_name }}"
 
+    - name: Capture the current date
+      command: date +%Y-%m-%d
+      register: current_date
+
     - name: Run build script
       shell: cd ./cyberdeck && ./build.sh
       become: yes
       become_user: root
       register: build_script_output
 
-    - name: Archive the build image
-      shell: zip -j ./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.zip ./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.img
-
     - name: Unzip to extract the raw image
       unarchive:
-        src: "./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.zip"
+        src: "./cyberdeck/deploy/image_{{ current_date }}-cyberdeck-lite.zip"
         dest: "./cyberdeck/deploy/"
         remote_src: yes
 
@@ -61,7 +62,7 @@
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
         key: "{{ image_key }}"
-        src: "./cyberdeck/deploy/image_{{ ansible_date_time.date }}-cyberdeck-lite.img"
+        src: "./cyberdeck/deploy/{{ current_date }}-cyberdeck-lite.img"
         region: "{{ region }}"
         mode: put
         tags:
