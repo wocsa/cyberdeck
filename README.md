@@ -184,6 +184,8 @@ iptables -X
 
 iptables -A INPUT -p tcp --dport 22 -j ACCEPT #accept ssh
 iptables -I INPUT -p tcp --dport 22 -m state --state NEW -j LOG --log-prefix "New SSH connection "
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT #accept rsh
+iptables -I INPUT -p tcp --dport 22 -m state --state NEW -j LOG --log-prefix "New RSH connection "
 iptables -A INPUT -p tcp --dport 80 -j ACCEPT #accept http
 iptables -I INPUT -p tcp --dport 80 -m state --state NEW -j LOG --log-prefix "New HTTP connection "
 iptables -A INPUT -p tcp --dport 443 -j ACCEPT #accept https

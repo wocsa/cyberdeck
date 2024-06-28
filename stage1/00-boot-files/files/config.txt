@@ -71,6 +71,9 @@ disable_overscan=1
 # (e.g. for USB device mode) or if USB support is not required.
 otg_mode=1
 
+# Disable under-voltage warning 
+avoid_warnings=1
+
 [all]
 
 [pi4]

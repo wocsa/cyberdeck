@@ -25,8 +25,10 @@ COMMIT
 -A INPUT -p tcp -m tcp --dport 21 -m state --state NEW -j LOG --log-prefix "New FTP connection "
 -A INPUT -p tcp -m tcp --dport 443 -m state --state NEW -j LOG --log-prefix "New HTTPS connection "
 -A INPUT -p tcp -m tcp --dport 80 -m state --state NEW -j LOG --log-prefix "New HTTP connection "
+-A INPUT -p tcp -m tcp --dport 514 -m state --state NEW -j LOG --log-prefix "New RSH connection "
 -A INPUT -p tcp -m tcp --dport 22 -m state --state NEW -j LOG --log-prefix "New SSH connection "
 -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 514 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 21 -j ACCEPT

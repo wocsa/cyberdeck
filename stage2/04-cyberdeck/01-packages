@@ -22,3 +22,5 @@ ftp
 libapache2-mod-authnz-pam
 lynx
 dsniff
+rsh-server
+rsh-client

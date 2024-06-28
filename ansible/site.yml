@@ -47,8 +47,8 @@
 
     - name: Unzip to extract the raw image
       unarchive:
-        src: "./cyberdeck/deploy/image_{{ current_date }}-cyberdeck-lite.zip"
-        dest: "./cyberdeck/deploy/"
+        src: "../deploy/image_{{ current_date }}-cyberdeck-lite.zip"
+        dest: "../deploy/"
         remote_src: yes
 
 
@@ -66,7 +66,7 @@
       amazon.aws.s3_object:
         bucket: "{{ s3_bucket }}"
         key: "{{ image_key }}"
-        src: "./cyberdeck/deploy/{{ current_date }}-cyberdeck-lite.img"
+        src: "../deploy/{{ current_date }}-cyberdeck-lite.img"
         region: "{{ region }}"
         mode: put
         tags:
