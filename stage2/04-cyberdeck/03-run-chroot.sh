@@ -56,8 +56,8 @@ chmod +x /etc/network/if-up.d/iptables
 
 echo "configure keyboard layout"
 echo '
-XKBMODEL="pc105"
-XKBLAYOUT="us"
+XKBMODEL="pc109"
+XKBLAYOUT="fr"
 XKBVARIANT=""
 XKBOPTIONS=""
 BACKSPACE="guess"
