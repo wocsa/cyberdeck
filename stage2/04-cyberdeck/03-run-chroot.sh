@@ -2,21 +2,24 @@
 
 echo "setting up firewall iptables logging"
 cat > /etc/firewall.conf <<EOL
-# Log all new connections and allow all connections
-*filter
+# Define custom chain for logging
+iptables -N LOGGING
 
-# 1. Default policies (ACCEPT everything)
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
+# Send all incoming traffic to LOGGING chain
+iptables -A INPUT -j LOGGING
 
-# 2. Log all NEW incoming connections (TCP, UDP, ICMP, etc.)
--A INPUT -m state --state NEW -j LOG --log-level 4
+# Send all outgoing traffic to LOGGING chain
+iptables -A OUTPUT -j LOGGING
 
-# 3. Accept all traffic
--A INPUT -j ACCEPT
--A FORWARD -j ACCEPT
--A OUTPUT -j ACCEPT
+# Send all forwarded traffic to LOGGING chain (if your server forwards traffic)
+iptables -A FORWARD -j LOGGING
+
+# Log everything in the LOGGING chain with identifiable prefix
+iptables -A LOGGING -j LOG --log-level 4
+
+# Allow the traffic after logging
+iptables -A LOGGING -j ACCEPT
+
 
 COMMIT
 EOL
@@ -117,20 +120,6 @@ echo "rename pi user into cyberjutsuka and set password"
 
 usermod --login cyberjutsuka pi || true
 echo "cyberjutsuka:hajime" | chpasswd
-
-# Create .ssh directory with 700 permissions for the user
-install -d -m 700 -o cyberjutsuka -g cyberjutsuka /home/cyberjutsuka/.ssh
-
-# Create the SSH config file with the specified content
-echo -e \"Host *\
-  ForwardAgent yes\" > /home/cyberjutsuka/.ssh/config
-
-# Set permissions to 600 for the config file (read/write for owner only)
-chmod 600 /home/cyberjutsuka/.ssh/config
-
-# Ensure ownership is correct for the directory and file
-chown -R cyberjutsuka:cyberjutsuka /home/cyberjutsuka/.ssh
-
 
 echo "setting up web server apache2"
 usermod -a -G www-data cyberjutsuka
