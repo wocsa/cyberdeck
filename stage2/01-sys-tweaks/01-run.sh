@@ -16,6 +16,10 @@ if [ -n "${PUBKEY_SSH_FIRST_USER}" ]; then
 	echo "${PUBKEY_SSH_FIRST_USER}" >"${ROOTFS_DIR}"/home/"${FIRST_USER_NAME}"/.ssh/authorized_keys
 	chown 1000:1000 "${ROOTFS_DIR}"/home/"${FIRST_USER_NAME}"/.ssh/authorized_keys
 	chmod 0600 "${ROOTFS_DIR}"/home/"${FIRST_USER_NAME}"/.ssh/authorized_keys
+
+	echo "Host *\n  ForwardAgent yes" >"${ROOTFS_DIR}"/home/"${FIRST_USER_NAME}"/.ssh/config
+	chown 1000:1000 "${ROOTFS_DIR}"/home/"${FIRST_USER_NAME}"/.ssh/config
+	chmod 0600 "${ROOTFS_DIR}"/home/"${FIRST_USER_NAME}"/.ssh/config
 fi
 
 if [ "${PUBKEY_ONLY_SSH}" = "1" ]; then
