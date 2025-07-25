@@ -90,7 +90,7 @@ chmod 600 /etc/skel/.ssh/config
 echo "configure keyboard layout"
 echo '
 XKBMODEL="pc109"
-XKBLAYOUT="fr"
+XKBLAYOUT="en"
 XKBVARIANT=""
 XKBOPTIONS=""
 BACKSPACE="guess"
