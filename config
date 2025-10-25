@@ -1,10 +1,10 @@
 export IMG_NAME=cyberdeck
 export DEPLOY_ZIP=1
 export TARGET_HOSTNAME=cyberdeck
-export LOCALE_DEFAULT=en_US.UTF-8
-export TIMEZONE_DEFAULT=US/Pacific
-export KEYBOARD_KEYMAP=us
-export KEYBOARD_LAYOUT="English (US)"
+export LOCALE_DEFAULT=fr_FR.UTF-8
+export TIMEZONE_DEFAULT=Europe/Paris
+export KEYBOARD_KEYMAP=fr
+export KEYBOARD_LAYOUT="French (France)"
 export FIRST_USER_NAME=cyberjutsuka
 export FIRST_USER_PASS=hajime
 export DISABLE_FIRST_BOOT_USER_RENAME=1
