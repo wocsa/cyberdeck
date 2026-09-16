@@ -22,3 +22,4 @@ ftp
 libapache2-mod-authnz-pam
 lynx
 dsniff
+rsyslog
