@@ -7,6 +7,7 @@ After=local-fs.target
 [Service]
 Type=oneshot
 ExecStart=/usr/sbin/iptables-restore /etc/firewall.conf
+ExecStart=/usr/sbin/ip6tables-restore /etc/firewall.conf
 RemainAfterExit=yes
 
 [Install]

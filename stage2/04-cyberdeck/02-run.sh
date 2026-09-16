@@ -1,6 +1,9 @@
 #!/bin/bash -e
 
 install -m 0644 files/cyberdeck-firewall.service "${ROOTFS_DIR}/etc/systemd/system/"
+install -m 0644 files/firewall.conf "${ROOTFS_DIR}/etc/firewall.conf"
+install -d -m 0755 "${ROOTFS_DIR}/etc/rsyslog.d"
+install -m 0644 files/20-iptables.conf "${ROOTFS_DIR}/etc/rsyslog.d/20-iptables.conf"
 
 # Cloud-init is installed by upstream even when its seed generation is disabled.
 if [ "${ENABLE_CLOUD_INIT}" != "1" ]; then

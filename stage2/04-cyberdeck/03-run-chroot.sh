@@ -1,30 +1,7 @@
 #!/bin/bash -e
 
 echo "setting up firewall iptables logging"
-cat > /etc/firewall.conf <<EOL
-*filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
-:LOGGING - [0:0]
-
-# Log packets traversing the host, then preserve the existing accept-all behavior.
--A INPUT -j LOGGING
--A OUTPUT -j LOGGING
--A FORWARD -j LOGGING
--A LOGGING -j LOG --log-prefix "iptables: " --log-level 4
--A LOGGING -j ACCEPT
-COMMIT
-EOL
-
-# Route kernel LOG target messages to the traditional syslog file.  The
-# package's default rules may already do this, but keep it explicit for the
-# firewall image.
-install -d -m 0755 /etc/rsyslog.d
-cat > /etc/rsyslog.d/20-iptables.conf <<'EOL'
-kern.*                                                  /var/log/syslog
-& stop
-EOL
+rsyslogd -N1
 systemctl enable rsyslog.service
 systemctl enable cyberdeck-firewall.service
 

@@ -53,7 +53,76 @@ Wi-Fi settings in `config` now create an automatically connecting NetworkManager
 profile with DHCP. `WPA_COUNTRY` still sets the regulatory domain. Cloud-init is
 disabled so the configured account and network settings remain in effect. The
 firewall is restored by `cyberdeck-firewall.service` before networking starts,
-and kernel firewall messages continue to go to `/var/log/syslog`.
+for IPv4 and IPv6. Compact network events go immediately to `/var/log/syslog`.
+
+### Live network events during sparring
+
+```sh
+tail -F -s 0.1 /var/log/syslog | grep --line-buffered ' net: '
+```
+
+Example (the timestamp includes the local UTC offset):
+
+```text
+2026-09-16T14:30:00.123456+02:00 cyberdeck net: ACTION=OBSERVE STATUS=NEW DIR=IN PROTO=TCP SRC=192.168.1.86 SPT=40250 DST=192.168.1.29 DPT=22 IN=wlan0
+```
+
+The first packet of a new tracked flow produces one line. A reserved connection
+mark bit (`0x80000000`) suppresses retransmissions and repeated unanswered UDP
+packets; established traffic, replies, and loopback traffic stay quiet. Other
+connection-mark bits are preserved. This avoids the repeated `NEW` packets that
+a plain `--ctstate NEW` logging rule would still print.
+
+Here, an **event** is a new conntrack flow, not each packet or application
+request. TCP connections, UDP endpoint/port tuples, and ping sessions get an
+initial observation. A new flow after conntrack expiry is a new event. Activity
+inside an existing SSH session or HTTP keep-alive connection needs application
+logs; it does not produce another firewall line.
+
+`ACTION=OBSERVE STATUS=NEW` means a connection attempt was seen, not that the
+connection or login succeeded. `RELATED`, `INVALID`, and `UNTRACKED` describe
+conntrack state. ICMP messages include `TYPE` and `CODE`; protocols without
+transport ports use `SPT=- DPT=-`. `DIR` is `IN`, `OUT`, or `FWD`. Addresses and
+ports are those at the filter hook, after any destination NAT. An ICMP failure
+can produce a separate `RELATED` event after the initial attempt.
+
+For a block with an explicit verdict in the log, insert an exercise rule before
+the observation rule and target `CD_DROP` or `CD_REJECT`, for example:
+
+```sh
+sudo iptables -I INPUT 1 -p tcp --dport 8080 -j CD_DROP
+# Undo the exercise:
+sudo iptables -D INPUT -p tcp --dport 8080 -j CD_DROP
+```
+
+These produce `ACTION=DROP` or `ACTION=REJECT STATUS=BLOCKED` and always enforce
+the verdict, even when repeat logs are suppressed. Use `ip6tables` for IPv6.
+Plain `DROP`/`REJECT` rules do not automatically log their verdict. `LOGGING`
+returns to the caller so appended training rules can execute; the default
+policies remain ACCEPT.
+
+Blocked and untracked packets cannot reliably retain a connection mark.
+`hashlimit` therefore emits their first event immediately, then at most one
+per ten seconds per action/state, protocol and endpoint/port tuple. The same
+guard applies to related/invalid traffic. Non-TCP/UDP traffic shares a bucket
+per source/destination pair, so repeated ICMP errors between the same hosts
+are grouped. There is no global limiter hiding different TCP/UDP ports in a
+scan. A scan with many distinct flows can still generate many lines; unlimited
+event coverage and bounded output volume cannot both be guaranteed under a
+flood. Kernel logging and queue capacity also limit delivery under overload.
+
+Rsyslog writes each formatted event without a delayed batching timer and stops
+processing that event before the default file rule, avoiding a second raw copy.
+Other syslog messages retain their usual format. Correct timestamps depend on
+the device clock being synchronized.
+
+The rules and formatter live in `stage2/04-cyberdeck/files/`. To exercise the
+rules without changing the host firewall, run this integration check on a
+Linux host with root, iproute2, util-linux, iptables, Python 3 and ping:
+
+```sh
+sudo unshare --net python3 tests/check_network_logging.py stage2/04-cyberdeck/files/firewall.conf
+```
 
 `DEPLOY_ZIP` has been replaced by `DEPLOY_COMPRESSION=zip`. Boot configuration is
 now under `/boot/firmware/`. The old QCOW2 helper/build option is no longer included.
@@ -243,32 +312,13 @@ version 1
 
 ### Firewall
 
-```
-iptables -F
-iptables -X
+The image installs event logging automatically. See
+[live network events during sparring](#live-network-events-during-sparring)
+for event semantics and rules that log a block verdict. Extra per-port `LOG`
+rules would bypass deduplication and can reintroduce duplicate entries.
 
-iptables -A INPUT -p tcp --dport 22 -j ACCEPT #accept ssh
-iptables -I INPUT -p tcp --dport 22 -m state --state NEW -j LOG --log-prefix "New SSH connection "
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT #accept http
-iptables -I INPUT -p tcp --dport 80 -m state --state NEW -j LOG --log-prefix "New HTTP connection "
-iptables -A INPUT -p tcp --dport 443 -j ACCEPT #accept https
-iptables -I INPUT -p tcp --dport 443 -m state --state NEW -j LOG --log-prefix "New HTTPS connection "
-iptables -A INPUT -p tcp --dport 21 -j ACCEPT #accept ftp
-iptables -I INPUT -p tcp --dport 21  -m state --state NEW -j LOG --log-prefix "New FTP connection "
-iptables -A OUTPUT -p tcp --sport 20 -j ACCEPT #accept ftp
-iptables -I INPUT -p tcp --sport 20 -m state --state NEW -j LOG --log-prefix "New FTP connection "
-iptables -A INPUT -p tcp --dport 53 -j ACCEPT #accept dns
-iptables -I INPUT -p tcp --dport 53 -m state --state NEW -j LOG --log-prefix "New DNS connection "
-iptables -A INPUT -p udp --dport 123 -j ACCEPT #accept ntp
-iptables -I INPUT -p tcp --dport 123 -m state --state NEW -j LOG --log-prefix "New NTP connection "
-iptables -A INPUT -p tcp --dport 161 -j ACCEPT #accept snmp
-iptables -I INPUT -p tcp --dport 161 -m state --state NEW -j LOG --log-prefix "New SNMP connection "
-iptables -A INPUT -p tcp --dport 23 -j ACCEPT #accept telnet
-iptables -I INPUT -p tcp --dport 23 -m state --state NEW -j LOG --log-prefix "New TELNET connection "
-iptables -A INPUT -p tcp --dport 25 -j ACCEPT #accept smtp
-iptables -I INPUT -p tcp --dport 25 -m state --state NEW -j LOG --log-prefix "New SMTP connection "
-
-iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT #accept established connections to continue
-
-iptables -A INPUT -p tcp -m state --state NEW -j LOG --log-prefix "INCOMING connection " # LOG incoming connections to syslog limit flood of messages
+```sh
+sudo iptables -L LOGGING -n -v
+sudo ip6tables -L LOGGING -n -v
+tail -F -s 0.1 /var/log/syslog | grep --line-buffered ' net: '
 ```
