@@ -22,6 +22,8 @@ GitLab CI file is not imported because this project uses GitHub Actions.
 
 - Cyberdeck configuration, stage2 training tools/services, desktop skip markers,
   README, Ansible/Terraform files, and GitHub Actions.
+- Chroot emulation preflight and support for the `qemu-arm-static` executable
+  name on older build hosts.
 - Bootstrap failure propagation and incomplete-rootfs recovery in `scripts/common`
   and stage prerun scripts.
 - A separate Trixie work directory, Docker container name, and configurable

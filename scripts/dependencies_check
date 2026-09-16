@@ -14,6 +14,10 @@ dependencies_check()
 
 		fi
 		for dep in $deps; do
+			# Older Ubuntu/Debian releases give static QEMU a separate name.
+			if [[ "${dep%:*}" == "qemu-arm" ]] && hash qemu-arm-static 2>/dev/null; then
+				continue
+			fi
 			if ! hash "${dep%:*}" 2>/dev/null; then
 				missing="${missing:+$missing }${dep#*:}"
 			fi
@@ -49,5 +53,38 @@ dependencies_check()
 			echo "  sudo modprobe binfmt_misc"
 			exit 1
 		fi
+	fi
+}
+
+check_architecture()
+{
+	local test_root test_cmd result=0
+
+	echo "Checking native $ARCH executable support..."
+	if arch-test -n "$ARCH"; then
+		return 0
+	fi
+	echo "WARNING: Only a native build environment is supported. Checking emulated support..."
+	if ! arch-test "$ARCH"; then
+		echo "No fallback mechanism found. Ensure your OS has binfmt_misc support enabled and configured."
+		return 1
+	fi
+
+	# Host execution alone can succeed with a dynamic QEMU interpreter that is
+	# unavailable inside debootstrap's empty chroot. Use the same execution
+	# context as bootstrap, without touching an existing stage rootfs.
+	test_root=$(mktemp -d "${WORK_DIR}/arch-test.XXXXXX") || return 1
+	printf -v test_cmd '%q ' arch-test -c "$test_root" "$ARCH"
+	echo "Checking $ARCH executable support inside a chroot..."
+	setarch linux32 capsh $CAPSH_ARG -- -c "$test_cmd" || result=$?
+	rmdir "$test_root" || return 1
+	if [ "$result" -ne 0 ]; then
+		echo "ARM emulation works on the host but failed inside the build chroot."
+		echo "Configure a static QEMU interpreter with the binfmt_misc F (fix binary) flag on the host."
+		echo "On Ubuntu hosts with a separate qemu-user-static package, run:"
+		echo "  sudo apt-get install qemu-user-static binfmt-support"
+		echo "  sudo update-binfmts --enable qemu-arm"
+		echo "For Docker builds, fix the host registration before restarting the build container."
+		return 1
 	fi
 }

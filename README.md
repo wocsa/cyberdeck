@@ -13,9 +13,25 @@ Cyberdeck **v1.4** uses pi-gen
 See [upstream provenance and local adaptations](UPSTREAM.md).
 
 Edit `config`, then run `./build-docker.sh` on a Linux Docker host. Install
-`qemu-user-binfmt` or `qemu-user-static` on non-ARM hosts first. A native ARM
+static QEMU and its binfmt registration on non-ARM hosts first. A native ARM
 builder with a 4 KB kernel page size is upstream's supported environment;
 cross-building depends on working QEMU/binfmt emulation.
+
+On Ubuntu hosts where `qemu-user-binfmt` uses a dynamic interpreter, install:
+
+```sh
+sudo apt-get install qemu-user-static binfmt-support
+sudo update-binfmts --enable qemu-arm
+```
+
+The build checks emulation inside an empty chroot before starting any stages.
+If `arch-test armhf` passes but the chroot check fails, check the host's
+`/proc/sys/fs/binfmt_misc/qemu-arm` registration: it must use static QEMU with
+the `F` flag so the interpreter remains available inside chroots (see the
+[kernel binfmt documentation](https://www.kernel.org/doc/html/latest/admin-guide/binfmt-misc.html)).
+Installing QEMU only inside a Docker image does not repair the host registration.
+After fixing the host, rerun the build; stage0 automatically retries an incomplete
+bootstrap without requiring `clean.sh`.
 
 The default image still ends at stage2 and exports a ZIP containing the Lite
 image into `deploy/`. Native builds use `work/cyberdeck-trixie-armhf`; Docker

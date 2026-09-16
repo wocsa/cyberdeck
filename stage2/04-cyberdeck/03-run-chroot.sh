@@ -148,5 +148,8 @@ echo "enable wireless"
 rfkill unblock all
 
 # Catch incompatible service configuration before exporting an image.
+# The build mounts an empty /run without systemd-tmpfiles to create /run/lock.
+# Apache's configtest needs this parent directory via the /var/lock symlink.
+install -d -m 1777 /run/lock
 apache2ctl configtest
 dnsmasq --test
