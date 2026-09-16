@@ -8,3 +8,4 @@ postrun.sh
 *-pc
 apt-cacher-ng/
 output.log
+__pycache__/

@@ -25,11 +25,8 @@ cat > /etc/rsyslog.d/20-iptables.conf <<'EOL'
 kern.*                                                  /var/log/syslog
 & stop
 EOL
-systemctl enable rsyslog.service >/dev/null 2>&1 || true
-
-echo '#!/bin/sh' > /etc/network/if-up.d/iptables
-echo "iptables-restore < /etc/firewall.conf" >> /etc/network/if-up.d/iptables
-chmod +x /etc/network/if-up.d/iptables
+systemctl enable rsyslog.service
+systemctl enable cyberdeck-firewall.service
 
 #SSH server allow using agent
 sed -i 's/#AllowAgentForwarding yes/AllowAgentForwarding yes/g' /etc/ssh/sshd_config
@@ -42,15 +39,17 @@ Host *
 EOF
 chmod 700 /etc/skel/.ssh
 chmod 600 /etc/skel/.ssh/config
+install -d -m 0700 -o "${FIRST_USER_NAME}" -g "${FIRST_USER_NAME}" "/home/${FIRST_USER_NAME}/.ssh"
+install -m 0600 -o "${FIRST_USER_NAME}" -g "${FIRST_USER_NAME}" /etc/skel/.ssh/config "/home/${FIRST_USER_NAME}/.ssh/config"
 
 echo "configure keyboard layout"
-echo '
+cat > /etc/default/keyboard <<EOF
 XKBMODEL="pc109"
-XKBLAYOUT="fr"
+XKBLAYOUT="${KEYBOARD_KEYMAP}"
 XKBVARIANT=""
 XKBOPTIONS=""
 BACKSPACE="guess"
-' > /etc/default/keyboard
+EOF
     
 dpkg-reconfigure --frontend noninteractive keyboard-configuration
 
@@ -72,13 +71,8 @@ VIDEOMODE=
 
 ' > /etc/default/console-setup
 
-echo "rename pi user into cyberjutsuka and set password"
-
-usermod --login cyberjutsuka pi || true
-echo "cyberjutsuka:hajime" | chpasswd
-
 echo "setting up web server apache2"
-usermod -a -G www-data cyberjutsuka
+usermod -a -G www-data "${FIRST_USER_NAME}"
 chown -R -f www-data:www-data /var/www/html
 
 
@@ -114,7 +108,6 @@ cat > /etc/apache2/sites-available/001-cyberjutsu.conf <<EOL
   <Location /server-status>
     SetHandler server-status
     Options All MultiViews
-    AllowOverride All
     Require all granted
     Order deny,allow
     AuthType Basic
@@ -149,7 +142,11 @@ a2ensite 001-cyberjutsu
 
 echo "setting up ftp server"
 groupadd -f ftpgroup
-usermod -a -G ftpgroup cyberjutsuka
+usermod -a -G ftpgroup "${FIRST_USER_NAME}"
 
 echo "enable wireless"
 rfkill unblock all
+
+# Catch incompatible service configuration before exporting an image.
+apache2ctl configtest
+dnsmasq --test

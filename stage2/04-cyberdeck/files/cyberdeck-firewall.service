@@ -1,0 +1,13 @@
+[Unit]
+Description=Restore Cyberdeck firewall logging rules
+Wants=network-pre.target
+Before=network-pre.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/iptables-restore /etc/firewall.conf
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

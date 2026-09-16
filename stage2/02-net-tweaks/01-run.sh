@@ -1,40 +1,24 @@
 #!/bin/bash -e
 
-install -v -d					"${ROOTFS_DIR}/etc/wpa_supplicant"
-install -v -m 600 files/wpa_supplicant.conf	"${ROOTFS_DIR}/etc/wpa_supplicant/"
+# Newer versions of raspberrypi-sys-mods set rfkill.default_state=0 to prevent
+# radiating on 5GHz bands until the WLAN regulatory domain is set.
+# Unfortunately, this also blocks bluetooth, so we whitelist the known
+# on-board BT adapters here.
 
-on_chroot << EOF
-	SUDO_USER="${FIRST_USER_NAME}" raspi-config nonint do_boot_wait 0
-	SUDO_USER="${FIRST_USER_NAME}" raspi-config nonint do_netconf 1
-EOF
+mkdir -p "${ROOTFS_DIR}/var/lib/systemd/rfkill/"
+#           5                 miniuart 4      miniuart Zero   miniuart other  other
+for addr in 107d50c000.serial 3f215040.serial 20215040.serial fe215040.serial soc; do
+	echo 0 > "${ROOTFS_DIR}/var/lib/systemd/rfkill/platform-${addr}:bluetooth"
+done
 
 if [ -v WPA_COUNTRY ]; then
 	on_chroot <<- EOF
 		SUDO_USER="${FIRST_USER_NAME}" raspi-config nonint do_wifi_country "${WPA_COUNTRY}"
 	EOF
-fi
-
-if [ -v WPA_ESSID ] && [ -v WPA_PASSWORD ]; then
-on_chroot <<EOF
-set -o pipefail
-wpa_passphrase "${WPA_ESSID}" "${WPA_PASSWORD}" | tee -a "/etc/wpa_supplicant/wpa_supplicant.conf"
-EOF
-elif [ -v WPA_ESSID ]; then
-cat >> "${ROOTFS_DIR}/etc/wpa_supplicant/wpa_supplicant.conf" << EOL
-
-network={
-	ssid="${WPA_ESSID}"
-	key_mgmt=NONE
-}
-EOL
-fi
-
-# Disable wifi on 5GHz models if WPA_COUNTRY is not set
-mkdir -p "${ROOTFS_DIR}/var/lib/systemd/rfkill/"
-if [ -n "$WPA_COUNTRY" ]; then
-    echo 0 > "${ROOTFS_DIR}/var/lib/systemd/rfkill/platform-3f300000.mmcnr:wlan"
-    echo 0 > "${ROOTFS_DIR}/var/lib/systemd/rfkill/platform-fe300000.mmcnr:wlan"
-else
-    echo 1 > "${ROOTFS_DIR}/var/lib/systemd/rfkill/platform-3f300000.mmcnr:wlan"
-    echo 1 > "${ROOTFS_DIR}/var/lib/systemd/rfkill/platform-fe300000.mmcnr:wlan"
+elif [ -d "${ROOTFS_DIR}/var/lib/NetworkManager" ]; then
+	# NetworkManager unblocks all WLAN devices by default. Prevent that:
+	cat > "${ROOTFS_DIR}/var/lib/NetworkManager/NetworkManager.state" <<- EOF
+		[main]
+		WirelessEnabled=false
+	EOF
 fi

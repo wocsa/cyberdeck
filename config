@@ -1,5 +1,13 @@
 export IMG_NAME=cyberdeck
-export DEPLOY_ZIP=1
+export RELEASE=trixie
+export DEPLOY_COMPRESSION=zip
+export PI_GEN_RELEASE="Cyberdeck 1.4"
+export PI_GEN_REPO=https://github.com/wocsa/cyberdeck
+export ENABLE_CLOUD_INIT=0
+# Do not reuse cached Bullseye root filesystems.
+export WORK_DIR="${WORK_DIR:-${BASE_DIR:-/pi-gen}/work/cyberdeck-trixie-armhf}"
+export CONTAINER_NAME="${CONTAINER_NAME:-cyberdeck-trixie-armhf}"
+export DOCKER_IMAGE="${DOCKER_IMAGE:-cyberdeck-pigen:trixie-armhf}"
 export TARGET_HOSTNAME=cyberdeck
 export LOCALE_DEFAULT=fr_FR.UTF-8
 export TIMEZONE_DEFAULT=Europe/Paris
@@ -8,6 +16,7 @@ export KEYBOARD_LAYOUT="French (France)"
 export FIRST_USER_NAME=cyberjutsuka
 export FIRST_USER_PASS=hajime
 export DISABLE_FIRST_BOOT_USER_RENAME=1
+export PASSWORDLESS_SUDO=1
 export ENABLE_SSH=1
 export WPA_ESSID=dojo
 export WPA_PASSWORD=cyberjutsu

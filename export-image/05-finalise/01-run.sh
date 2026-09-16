@@ -2,15 +2,29 @@
 
 IMG_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.img"
 INFO_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.info"
+SBOM_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.sbom"
+BMAP_FILE="${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.bmap"
 
-on_chroot << EOF
-if [ -x /etc/init.d/fake-hwclock ]; then
-	/etc/init.d/fake-hwclock stop
-fi
-if hash hardlink 2>/dev/null; then
-	hardlink -t /usr/share/doc
-fi
+on_chroot <<- EOF
+	update-initramfs -k all -c
+	if hash hardlink 2>/dev/null; then
+		hardlink -t /usr/share/doc
+	fi
+	if [ -f /usr/lib/systemd/system/apt-listchanges.service ]; then
+		python3 -m apt_listchanges.populate_database --profile apt
+		systemctl disable apt-listchanges.timer
+	fi
+	# Cyberdeck installs OpenNTPD, which replaces systemd-timesyncd.
+	if dpkg-query -W -f='\${Status}' systemd-timesyncd 2>/dev/null | grep -q 'install ok installed'; then
+		install -m 755 -o systemd-timesync -g systemd-timesync -d /var/lib/systemd/timesync
+		install -m 644 -o systemd-timesync -g systemd-timesync /dev/null /var/lib/systemd/timesync/clock
+	fi
 EOF
+
+if [ -f "${ROOTFS_DIR}/etc/initramfs-tools/update-initramfs.conf" ]; then
+	sed -i 's/^update_initramfs=.*/update_initramfs=yes/' "${ROOTFS_DIR}/etc/initramfs-tools/update-initramfs.conf"
+	sed -i 's/^MODULES=.*/MODULES=dep/' "${ROOTFS_DIR}/etc/initramfs-tools/initramfs.conf"
+fi
 
 if [ -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config" ]; then
 	chmod 700 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config"
@@ -43,7 +57,7 @@ rm -f "${ROOTFS_DIR}"/usr/share/icons/*/icon-theme.cache
 
 rm -f "${ROOTFS_DIR}/var/lib/dbus/machine-id"
 
-true > "${ROOTFS_DIR}/etc/machine-id"
+echo "uninitialized" > "${ROOTFS_DIR}/etc/machine-id"
 
 ln -nsf /proc/mounts "${ROOTFS_DIR}/etc/mtab"
 
@@ -53,10 +67,12 @@ rm -f "${ROOTFS_DIR}/root/.vnc/private.key"
 rm -f "${ROOTFS_DIR}/etc/vnc/updateid"
 
 update_issue "$(basename "${EXPORT_DIR}")"
-install -m 644 "${ROOTFS_DIR}/etc/rpi-issue" "${ROOTFS_DIR}/boot/issue.txt"
+install -m 644 "${ROOTFS_DIR}/etc/rpi-issue" "${ROOTFS_DIR}/boot/firmware/issue.txt"
+if ! [ -L "${ROOTFS_DIR}/boot/issue.txt" ]; then
+	ln -s firmware/issue.txt "${ROOTFS_DIR}/boot/issue.txt"
+fi
 
 cp "$ROOTFS_DIR/etc/rpi-issue" "$INFO_FILE"
-
 
 {
 	if [ -f "$ROOTFS_DIR/usr/share/doc/raspberrypi-kernel/changelog.Debian.gz" ]; then
@@ -76,24 +92,35 @@ cp "$ROOTFS_DIR/etc/rpi-issue" "$INFO_FILE"
 	dpkg -l --root "$ROOTFS_DIR"
 } >> "$INFO_FILE"
 
+if hash syft 2>/dev/null; then
+	syft scan dir:"${ROOTFS_DIR}" \
+		--base-path="${ROOTFS_DIR}" \
+		--source-name="${IMG_NAME}${IMG_SUFFIX}" \
+		--source-version="${IMG_DATE}" \
+		-o spdx-json="${SBOM_FILE}"
+fi
+
+# Prefer fstrim (holes -> sparse bmap); fall back to zerofree if discard is unsupported.
+if fstrim -v "${ROOTFS_DIR}"; then
+	unmount "${ROOTFS_DIR}"
+else
+	ROOT_DEV="$(awk "\$2 == \"${ROOTFS_DIR}\" {print \$1}" /etc/mtab)"
+	unmount "${ROOTFS_DIR}"
+	zerofree "${ROOT_DEV}"
+fi
+
+unmount_image "${IMG_FILE}"
+
+if hash bmaptool 2>/dev/null; then
+	bmaptool create \
+		-o "${BMAP_FILE}" \
+		"${IMG_FILE}"
+fi
+
 mkdir -p "${DEPLOY_DIR}"
 
 rm -f "${DEPLOY_DIR}/${ARCHIVE_FILENAME}${IMG_SUFFIX}.*"
 rm -f "${DEPLOY_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.img"
-
-mv "$INFO_FILE" "$DEPLOY_DIR/"
-
-if [ "${USE_QCOW2}" = "0" ] && [ "${NO_PRERUN_QCOW2}" = "0" ]; then
-	ROOT_DEV="$(mount | grep "${ROOTFS_DIR} " | cut -f1 -d' ')"
-
-	unmount "${ROOTFS_DIR}"
-	zerofree "${ROOT_DEV}"
-
-	unmount_image "${IMG_FILE}"
-else
-	unload_qimage
-	make_bootable_image "${STAGE_WORK_DIR}/${IMG_FILENAME}${IMG_SUFFIX}.qcow2" "$IMG_FILE"
-fi
 
 case "${DEPLOY_COMPRESSION}" in
 zip)
@@ -114,3 +141,11 @@ none | *)
 	cp "$IMG_FILE" "$DEPLOY_DIR/"
 ;;
 esac
+
+if [ -f "${SBOM_FILE}" ]; then
+	xz -c "${SBOM_FILE}" > "$DEPLOY_DIR/$(basename "${SBOM_FILE}").xz"
+fi
+if [ -f "${BMAP_FILE}" ]; then
+	cp "$BMAP_FILE" "$DEPLOY_DIR/"
+fi
+cp "$INFO_FILE" "$DEPLOY_DIR/"

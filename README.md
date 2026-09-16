@@ -4,6 +4,55 @@ Generation of operating system for the Cyberdeck based on [pi-gen](https://githu
 
 To build it please [read the doc](pi-gen.md)
 
+## Current image build
+
+Cyberdeck **v1.4** uses pi-gen
+[`2026-09-15-raspios-trixie-armhf`](https://github.com/RPi-Distro/pi-gen/tree/2026-09-15-raspios-trixie-armhf)
+(Trixie, 32-bit). The matching repository tags are `v1.4` and
+`pi-gen-2026-09-15-raspios-trixie-armhf`.
+See [upstream provenance and local adaptations](UPSTREAM.md).
+
+Edit `config`, then run `./build-docker.sh` on a Linux Docker host. Install
+`qemu-user-binfmt` or `qemu-user-static` on non-ARM hosts first. A native ARM
+builder with a 4 KB kernel page size is upstream's supported environment;
+cross-building depends on working QEMU/binfmt emulation.
+
+The default image still ends at stage2 and exports a ZIP containing the Lite
+image into `deploy/`. Native builds use `work/cyberdeck-trixie-armhf`; Docker
+uses container `cyberdeck-trixie-armhf` and image `cyberdeck-pigen:trixie-armhf`.
+These defaults avoid reusing Bullseye build state. Do not resume an old build
+container or point `WORK_DIR` at a Bullseye root filesystem.
+
+If Docker storage is limited, bind the build volumes to the project filesystem:
+
+```sh
+PIGEN_DOCKER_OPTS="--mount type=bind,src=$PWD/work,dst=/pi-gen/work" ./build-docker.sh
+```
+
+Allow several tens of GB for stage copies and image export, plus space in Docker's
+own storage for its builder image and deployment volume. Existing build artifacts
+are not automatically deleted by this upgrade.
+
+Wi-Fi settings in `config` now create an automatically connecting NetworkManager
+profile with DHCP. `WPA_COUNTRY` still sets the regulatory domain. Cloud-init is
+disabled so the configured account and network settings remain in effect. The
+firewall is restored by `cyberdeck-firewall.service` before networking starts,
+and kernel firewall messages continue to go to `/var/log/syslog`.
+
+`DEPLOY_ZIP` has been replaced by `DEPLOY_COMPRESSION=zip`. Boot configuration is
+now under `/boot/firmware/`. The old QCOW2 helper/build option is no longer included.
+
+Run local regression checks with `python3 -m unittest discover -s tests -v`
+(NetworkManager's `nmcli` 1.42+ enables the offline Wi-Fi checks). The image build
+also checks Apache and dnsmasq configuration before export.
+
+After a successful build, test the ZIP with `unzip -t deploy/image_*-cyberdeck-lite.zip`.
+On a Raspberry Pi, confirm Trixie in `/etc/os-release`, `armhf` from
+`dpkg --print-architecture`, connection to `dojo`, SSH login as `cyberjutsuka`,
+French keyboard/locale and Europe/Paris timezone, expected training services, and
+`systemctl status cyberdeck-firewall rsyslog` plus firewall messages in
+`/var/log/syslog`. Hardware boot validation is separate from build validation.
+
 ## What is it ?
 
 Cyberdeck is the equipment for [Cyberjūtsuka サイバー述家](https://github.com/wocsa/cyberjutsu/blob/main/glossary.md#cyberjutsuka) used to practice [Cyberjūtsu サイバー述](http://github.com/wocsa/cyberjutsu).
