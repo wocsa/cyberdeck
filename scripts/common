@@ -17,11 +17,24 @@ bootstrap(){
 	BOOTSTRAP_ARGS+=("$@")
 	printf -v BOOTSTRAP_STR '%q ' "${BOOTSTRAP_ARGS[@]}"
 
-	setarch linux32 capsh $CAPSH_ARG -- -c "'${BOOTSTRAP_CMD}' $BOOTSTRAP_STR" || true
+	# Do not hide bootstrap failures.  debootstrap can leave a partial rootfs
+	# behind, which must not be mistaken for a completed bootstrap on a retry.
+	if ! setarch linux32 capsh $CAPSH_ARG -- -c "'${BOOTSTRAP_CMD}' $BOOTSTRAP_STR"; then
+		if [ -f "$2/debootstrap/debootstrap.log" ]; then
+			cp "$2/debootstrap/debootstrap.log" "${STAGE_WORK_DIR}"
+			log "bootstrap failed: please check ${STAGE_WORK_DIR}/debootstrap.log"
+		fi
+		return 1
+	fi
 
 	if [ -d "$2/debootstrap" ] && ! rmdir "$2/debootstrap"; then
 		cp "$2/debootstrap/debootstrap.log" "${STAGE_WORK_DIR}"
 		log "bootstrap failed: please check ${STAGE_WORK_DIR}/debootstrap.log"
+		return 1
+	fi
+
+	if [ ! -x "$2/bin/sh" ] || [ ! -d "$2/etc/apt" ]; then
+		log "bootstrap failed: incomplete rootfs at $2"
 		return 1
 	fi
 }
