@@ -5,6 +5,10 @@ rsyslogd -N1
 systemctl enable rsyslog.service
 systemctl enable cyberdeck-firewall.service
 
+# Keep Fail2ban available for exercises without banning dojo participants.
+# Its persistent SSH bans otherwise return after a reboot.
+systemctl disable fail2ban.service
+
 #SSH server allow using agent
 sed -i 's/#AllowAgentForwarding yes/AllowAgentForwarding yes/g' /etc/ssh/sshd_config
 

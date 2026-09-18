@@ -55,6 +55,11 @@ disabled so the configured account and network settings remain in effect. The
 firewall is restored by `cyberdeck-firewall.service` before networking starts,
 for IPv4 and IPv6. Compact network events go immediately to `/var/log/syslog`.
 
+Fail2ban is installed for exercises but disabled at boot. Its automatic SSH bans
+can lock out dojo participants and persist across reboots. Enable it explicitly
+only when an exercise calls for it. On existing images, stop and disable it with
+`sudo systemctl disable --now fail2ban.service`.
+
 ### Live network events during sparring
 
 ```sh
